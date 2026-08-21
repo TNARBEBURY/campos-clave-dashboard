@@ -4,79 +4,79 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Campos Clave Salesforce — Tablero</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
 :root{
-  --bg:#0f1117;--card:#181d2d;--card2:#1e2540;--border:#252d45;
-  --text:#e2e8f0;--muted:#8892a4;
-  --blue:#3b82f6;--green:#10b981;--amber:#f59e0b;
-  --red:#ef4444;--purple:#8b5cf6;--cyan:#06b6d4;
+  color-scheme:light;
+  --page:#f9f9f7;--surface:#fcfcfb;--surface2:#f1f0ec;--border:rgba(11,11,11,.10);
+  --ink:#0b0b0b;--ink2:#52514e;--muted:#898781;--grid:#e1e0d9;
+  --blue:#2a78d6;--orange:#eb6834;--aqua:#1baf7a;--violet:#4a3aa7;
+  --good:#0ca30c;--critical:#d03b3b;
 }
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;min-height:100vh;margin:0}
-.hdr{background:linear-gradient(135deg,#0b0f1a 0%,#141c38 50%,#0b0f1a 100%);border-bottom:1px solid var(--border);padding:18px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
-.hdr h1{font-size:19px;margin:0}
-.hdr .sub{font-size:11px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:1px}
-.hdr-right{text-align:right;font-size:12px;color:var(--muted);line-height:1.6}
-.wrap{padding:24px 32px;max-width:1400px;margin:0 auto}
+body{background:var(--page);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;margin:0;min-height:100vh}
+.hdr{background:var(--surface);border-bottom:1px solid var(--border);padding:18px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.hdr h1{font-size:20px;margin:0;color:var(--ink)}
+.hdr .sub{color:var(--ink2);font-size:12px;margin-top:4px}
+.hdr-right{text-align:right;font-size:12px;color:var(--ink2);line-height:1.6}
+.tag{display:inline-block;background:var(--blue);color:#fff;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;margin-bottom:5px}
+.wrap{padding:24px 32px 60px;max-width:1400px;margin:0 auto}
 
-.filters{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-bottom:22px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 18px}
+.filters{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-bottom:22px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;box-shadow:0 1px 2px rgba(11,11,11,.04)}
 .filter-grp{display:flex;flex-direction:column;gap:6px}
-.filter-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
-select,input[type=text]{background:var(--card2);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:13px;min-width:220px}
+.filter-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+select,input[type=text]{background:var(--surface2);color:var(--ink);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:13px;min-width:220px}
 select:focus,input:focus{outline:none;border-color:var(--blue)}
-.reset-btn{background:var(--card2);color:var(--muted);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer}
-.reset-btn:hover{color:var(--text);border-color:var(--blue)}
+input[type=text]::placeholder{color:var(--muted)}
+.reset-btn{background:var(--surface2);color:var(--ink2);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer}
+.reset-btn:hover{color:var(--ink);border-color:var(--blue)}
 
-.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px}
-.kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:22px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden;box-shadow:0 1px 2px rgba(11,11,11,.04)}
 .kpi::after{content:'';position:absolute;top:0;left:0;width:4px;height:100%}
 .kpi.k-total::after{background:var(--blue)}
-.kpi.k-complete::after{background:var(--green)}
-.kpi.k-missing::after{background:var(--red)}
-.kpi.k-delta::after{background:var(--cyan)}
-.kpi-lbl{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px}
-.kpi-val{font-size:28px;font-weight:700;font-variant-numeric:tabular-nums}
-.kpi.k-complete .kpi-val{color:var(--green)}
-.kpi.k-missing .kpi-val{color:var(--red)}
-.kpi-sub{font-size:12px;color:var(--muted);margin-top:5px}
+.kpi.k-complete::after{background:var(--good)}
+.kpi.k-missing::after{background:var(--critical)}
+.kpi.k-delta::after{background:var(--aqua)}
+.kpi .lbl{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+.kpi .val{font-size:26px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.kpi.k-complete .val{color:var(--good)}
+.kpi.k-missing .val{color:var(--critical)}
+.kpi .sub2{color:var(--ink2);font-size:11px;margin-top:4px}
 
-.charts-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:18px;margin-bottom:22px}
-.sec{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-.sec-hdr{padding:14px 22px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-.sec-hdr h3{margin:0;font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--text)}
-.sec-meta{font-size:11px;color:var(--muted)}
-.sec-body{padding:18px 22px}
+.charts-row{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-bottom:22px}
+@media(max-width:1000px){.charts-row{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}}
 
-.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.bar-lbl{width:230px;font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bar-track{flex:1;background:var(--card2);border-radius:4px;height:18px;position:relative;overflow:hidden}
-.bar-fill{background:var(--blue);height:100%;border-radius:4px;min-width:2px}
-.bar-val{width:64px;text-align:right;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.sec{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:22px;overflow:hidden;box-shadow:0 1px 2px rgba(11,11,11,.04)}
+.sec-h{padding:16px 20px;border-bottom:1px solid var(--border);font-weight:600;font-size:14px;display:flex;justify-content:space-between;align-items:center;color:var(--ink)}
+.sec-meta{font-size:11px;color:var(--muted);font-weight:400}
+.sec-b{padding:20px}
+canvas{max-height:280px}
 
-.trend-wrap{position:relative;height:180px}
-.no-hist{color:var(--muted);text-align:center;padding:40px 10px;font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.03em;padding:9px 14px;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:9px 14px;border-bottom:1px solid var(--grid);vertical-align:top;color:var(--ink2)}
+td b{color:var(--ink)}
+tr:hover td{background:rgba(11,11,11,.025)}
 
-table{width:100%;border-collapse:collapse}
-th{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:9px 14px;border-bottom:1px solid var(--border);font-weight:600;white-space:nowrap;text-align:left}
-td{padding:9px 14px;border-bottom:1px solid var(--border);font-size:12.5px;vertical-align:top}
-tr:hover td{background:rgba(255,255,255,.02)}
-.mc-badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700}
-.mc-0{background:rgba(16,185,129,.15);color:var(--green)}
-.mc-low{background:rgba(245,158,11,.15);color:var(--amber)}
-.mc-high{background:rgba(239,68,68,.15);color:var(--red)}
-.field-chip{display:inline-block;background:var(--card2);color:var(--muted);border:1px solid var(--border);border-radius:20px;padding:1px 8px;font-size:10.5px;margin:1px}
-.pager{display:flex;justify-content:space-between;align-items:center;padding:12px 22px;font-size:12px;color:var(--muted)}
-.pager button{background:var(--card2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px}
+.mc-badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+.mc-0{background:rgba(12,163,12,.12);color:var(--good)}
+.mc-low{background:rgba(235,104,52,.12);color:var(--orange)}
+.mc-high{background:rgba(208,59,59,.12);color:var(--critical)}
+.field-chip{display:inline-block;background:var(--surface2);color:var(--ink2);border:1px solid var(--border);border-radius:20px;padding:1px 8px;font-size:10.5px;margin:1px}
+.pager{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;font-size:12px;color:var(--muted)}
+.pager button{background:var(--surface2);color:var(--ink);border:1px solid var(--border);border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px}
 .pager button:disabled{opacity:.4;cursor:default}
 .text-muted{color:var(--muted)}
-@media (max-width:1000px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.charts-grid{grid-template-columns:1fr}}
+.no-hist{color:var(--muted);text-align:center;padding:40px 10px;font-size:13px}
 </style>
 </head>
 <body>
 
 <div class="hdr">
   <div>
-    <h1>Tablero de Campos Clave — Salesforce</h1>
+    <div class="tag">SALESFORCE · CALIDAD DE DATOS</div>
+    <h1>Tablero de Campos Clave</h1>
     <div class="sub">Completitud de datos por oportunidad · Hunting Instore</div>
   </div>
   <div class="hdr-right">
@@ -103,47 +103,47 @@ tr:hover td{background:rgba(255,255,255,.02)}
     <button class="reset-btn" id="btnReset">Limpiar filtros</button>
   </div>
 
-  <div class="kpi-grid">
+  <div class="kpis">
     <div class="kpi k-total">
-      <div class="kpi-lbl">Oportunidades</div>
-      <div class="kpi-val" id="kTotal">-</div>
-      <div class="kpi-sub" id="kTotalSub"></div>
+      <div class="lbl">Oportunidades</div>
+      <div class="val" id="kTotal">-</div>
+      <div class="sub2" id="kTotalSub"></div>
     </div>
     <div class="kpi k-complete">
-      <div class="kpi-lbl">Completas (0 campos faltantes)</div>
-      <div class="kpi-val" id="kComplete">-</div>
-      <div class="kpi-sub" id="kCompleteSub"></div>
+      <div class="lbl">Completas (0 campos faltantes)</div>
+      <div class="val" id="kComplete">-</div>
+      <div class="sub2" id="kCompleteSub"></div>
     </div>
     <div class="kpi k-missing">
-      <div class="kpi-lbl">Campos faltantes (total)</div>
-      <div class="kpi-val" id="kMissing">-</div>
-      <div class="kpi-sub" id="kMissingSub"></div>
+      <div class="lbl">Campos faltantes (total)</div>
+      <div class="val" id="kMissing">-</div>
+      <div class="sub2" id="kMissingSub"></div>
     </div>
     <div class="kpi k-delta">
-      <div class="kpi-lbl">Corregidos última semana</div>
-      <div class="kpi-val" id="kDelta">-</div>
-      <div class="kpi-sub" id="kDeltaSub"></div>
+      <div class="lbl">Corregidos última semana</div>
+      <div class="val" id="kDelta">-</div>
+      <div class="sub2" id="kDeltaSub"></div>
     </div>
   </div>
 
-  <div class="charts-grid">
+  <div class="charts-row">
     <div class="sec">
-      <div class="sec-hdr"><h3 id="chartLeftTitle">Campos que más faltan</h3><div class="sec-meta">Top 10</div></div>
-      <div class="sec-body" id="chartFields"></div>
+      <div class="sec-h">Campos que más faltan <span class="sec-meta">Top 10</span></div>
+      <div class="sec-b"><canvas id="fieldsChart"></canvas></div>
     </div>
     <div class="sec">
-      <div class="sec-hdr"><h3 id="chartRightTitle">Por supervisor</h3><div class="sec-meta" id="chartRightMeta"></div></div>
-      <div class="sec-body" id="chartGroup"></div>
+      <div class="sec-h" id="groupTitle">Por supervisor <span class="sec-meta" id="groupMeta"></span></div>
+      <div class="sec-b"><canvas id="groupChart"></canvas></div>
     </div>
-  </div>
-
-  <div class="sec" style="margin-bottom:22px">
-    <div class="sec-hdr"><h3>Evolución — campos faltantes</h3><div class="sec-meta" id="trendMeta"></div></div>
-    <div class="sec-body"><div class="trend-wrap" id="trendChart"></div></div>
   </div>
 
   <div class="sec">
-    <div class="sec-hdr"><h3>Detalle de oportunidades</h3><div class="sec-meta" id="tableMeta"></div></div>
+    <div class="sec-h">Evolución — campos faltantes <span class="sec-meta" id="trendMeta"></span></div>
+    <div class="sec-b" id="trendWrap"><canvas id="trendChart"></canvas></div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-h">Detalle de oportunidades <span class="sec-meta" id="tableMeta"></span></div>
     <div style="overflow-x:auto">
       <table>
         <thead><tr>
@@ -167,10 +167,15 @@ tr:hover td{background:rgba(255,255,255,.02)}
 <script>
 const PAGE_SIZE = 50;
 const MAX_HISTORY_DAYS = 60;
+const TOOLTIP_STYLE = { backgroundColor:'#ffffff', borderColor:'#e1e0d9', borderWidth:1, titleColor:'#0b0b0b', bodyColor:'#52514e', padding:10, boxPadding:4 };
+Chart.defaults.font.family = "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
+Chart.defaults.color = '#898781';
+
 let DATA = null;      // {as_of, fields, opportunities}
 let HIST_INDEX = [];  // dates
 let HIST_CACHE = {};  // date -> aggregates json
 let state = { supervisor: 'Todos', hunter: 'Todos', search: '', page: 0 };
+let fieldsC, groupC, trendC;
 
 function cacheBust(url){ return url + (url.includes('?') ? '&' : '?') + 'v=' + Date.now(); }
 
@@ -249,13 +254,12 @@ function renderKpis(rows){
   document.getElementById('kMissing').textContent = fmtInt(missing);
   document.getElementById('kMissingSub').textContent = total? `Promedio ${(missing/total).toFixed(1)} por oportunidad` : '';
 
-  // delta vs ~7 dias atras usando historial de aggregates
   computeDelta().then(({delta, fromDate, available})=>{
     const el = document.getElementById('kDelta');
     const sub = document.getElementById('kDeltaSub');
-    if(!available){ el.textContent='—'; sub.textContent='Necesitamos más días de historial'; return; }
+    if(!available){ el.textContent='—'; el.style.color=''; sub.textContent='Necesitamos más días de historial'; return; }
     el.textContent = (delta>0? '−' : delta<0? '+' : '') + fmtInt(Math.abs(delta));
-    el.style.color = delta>0 ? 'var(--green)' : (delta<0 ? 'var(--red)' : 'var(--muted)');
+    el.style.color = delta>0 ? 'var(--good)' : (delta<0 ? 'var(--critical)' : 'var(--ink)');
     sub.textContent = `vs ${fromDate} (campos faltantes)`;
   });
 }
@@ -301,84 +305,80 @@ function renderFieldChart(rows){
   const fields = DATA.fields;
   const counts = new Array(fields.length).fill(0);
   rows.forEach(o=> o.mf.forEach(fi=> counts[fi]++));
-  const pairs = fields.map((f,i)=>({f, c:counts[i]})).sort((a,b)=>b.c-a.c).slice(0,10);
-  const max = Math.max(1, ...pairs.map(p=>p.c));
-  const el = document.getElementById('chartFields');
-  el.innerHTML = pairs.map(p=>`
-    <div class="bar-row">
-      <div class="bar-lbl" title="${p.f}">${p.f}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${(p.c/max*100).toFixed(1)}%"></div></div>
-      <div class="bar-val">${fmtInt(p.c)}</div>
-    </div>`).join('') || '<div class="no-hist">Sin datos</div>';
+  const pairs = fields.map((f,i)=>({f, c:counts[i]})).sort((a,b)=>b.c-a.c).slice(0,10).reverse();
+
+  if(fieldsC) fieldsC.destroy();
+  const ctx = document.getElementById('fieldsChart').getContext('2d');
+  fieldsC = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: pairs.map(p=>p.f), datasets: [{ label:'Oportunidades', data: pairs.map(p=>p.c), backgroundColor:'#2a78d6', borderRadius:4, maxBarThickness:22 }] },
+    options: {
+      indexAxis: 'y',
+      plugins: { legend:{display:false}, tooltip:{...TOOLTIP_STYLE, callbacks:{label:c=>fmtInt(c.parsed.x)+' oportunidades'}} },
+      scales: { x:{beginAtZero:true, grid:{color:'#e1e0d9'}, ticks:{color:'#898781'}}, y:{grid:{display:false}, ticks:{color:'#0b0b0b', font:{size:11}}} }
+    }
+  });
 }
 
 function renderGroupChart(rows){
-  const rightTitle = document.getElementById('chartRightTitle');
-  const rightMeta = document.getElementById('chartRightMeta');
-  let groups = {};
-  let byKeyLabel;
-  if(state.hunter!=='Todos'){
-    rightTitle.textContent = 'Por etapa';
-    rightMeta.textContent = state.hunter;
-    byKeyLabel = o=>o.e;
-  } else if(state.supervisor!=='Todos'){
-    rightTitle.textContent = 'Por hunter';
-    rightMeta.textContent = state.supervisor;
-    byKeyLabel = o=>o.h;
-  } else {
-    rightTitle.textContent = 'Por supervisor';
-    rightMeta.textContent = 'Todos';
-    byKeyLabel = o=>o.s;
-  }
-  rows.forEach(o=>{
-    const k = byKeyLabel(o) || '(sin dato)';
-    groups[k] = (groups[k]||0) + o.mc;
+  const titleEl = document.getElementById('groupTitle');
+  const metaEl = document.getElementById('groupMeta');
+  let byKeyLabel, title;
+  if(state.hunter!=='Todos'){ title='Por etapa'; metaEl.textContent = state.hunter; byKeyLabel = o=>o.e; }
+  else if(state.supervisor!=='Todos'){ title='Por hunter'; metaEl.textContent = state.supervisor; byKeyLabel = o=>o.h; }
+  else { title='Por supervisor'; metaEl.textContent = 'Todos'; byKeyLabel = o=>o.s; }
+  titleEl.childNodes[0].textContent = title + ' ';
+
+  const groups = {};
+  rows.forEach(o=>{ const k = byKeyLabel(o) || '(sin dato)'; groups[k] = (groups[k]||0) + o.mc; });
+  const pairs = Object.entries(groups).sort((a,b)=>b[1]-a[1]).slice(0,12).reverse();
+
+  if(groupC) groupC.destroy();
+  const ctx = document.getElementById('groupChart').getContext('2d');
+  groupC = new Chart(ctx, {
+    type: 'bar',
+    data: { labels: pairs.map(p=>p[0]), datasets: [{ label:'Campos faltantes', data: pairs.map(p=>p[1]), backgroundColor:'#1baf7a', borderRadius:4, maxBarThickness:22 }] },
+    options: {
+      indexAxis: 'y',
+      plugins: { legend:{display:false}, tooltip:{...TOOLTIP_STYLE, callbacks:{label:c=>fmtInt(c.parsed.x)+' campos faltantes'}} },
+      scales: { x:{beginAtZero:true, grid:{color:'#e1e0d9'}, ticks:{color:'#898781'}}, y:{grid:{display:false}, ticks:{color:'#0b0b0b', font:{size:11}}} }
+    }
   });
-  const pairs = Object.entries(groups).sort((a,b)=>b[1]-a[1]).slice(0,12);
-  const max = Math.max(1, ...pairs.map(p=>p[1]));
-  const el = document.getElementById('chartGroup');
-  el.innerHTML = pairs.map(([k,v])=>`
-    <div class="bar-row">
-      <div class="bar-lbl" title="${k}">${k}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${(v/max*100).toFixed(1)}%;background:var(--purple)"></div></div>
-      <div class="bar-val">${fmtInt(v)}</div>
-    </div>`).join('') || '<div class="no-hist">Sin datos</div>';
 }
 
 async function renderTrend(){
   const meta = document.getElementById('trendMeta');
-  const el = document.getElementById('trendChart');
+  const wrap = document.getElementById('trendWrap');
   const g = groupKeyForFilter();
   meta.textContent = g.type==='overall' ? 'Todo el equipo' : (g.type==='supervisor'? state.supervisor : `${state.supervisor} · ${state.hunter}`);
 
   if(HIST_INDEX.length < 2){
-    el.innerHTML = '<div class="no-hist">Todavía no hay suficiente historial diario para mostrar una tendencia.<br>Este tablero guarda un snapshot por día — volvé a mirarlo en unos días.</div>';
+    if(trendC){ trendC.destroy(); trendC=null; }
+    wrap.innerHTML = '<div class="no-hist">Todavía no hay suficiente historial diario para mostrar una tendencia.<br>Este tablero guarda un snapshot por día — volvé a mirarlo en unos días.</div>';
     return;
   }
   const snaps = await Promise.all(HIST_INDEX.map(getHistSnapshot));
   const points = HIST_INDEX.map((d,i)=>({d, v: missingSlotsFromSnapshot(snaps[i])})).filter(p=>p.v!==null && p.v!==undefined);
   if(points.length < 2){
-    el.innerHTML = '<div class="no-hist">Sin historial suficiente para este filtro todavía.</div>';
+    if(trendC){ trendC.destroy(); trendC=null; }
+    wrap.innerHTML = '<div class="no-hist">Sin historial suficiente para este filtro todavía.</div>';
     return;
   }
-  drawLineChart(el, points);
-}
-
-function drawLineChart(container, points){
-  const w = container.clientWidth || 600, h = 180, pad = 30;
-  const maxV = Math.max(...points.map(p=>p.v)) * 1.1 || 1;
-  const minV = 0;
-  const stepX = (w - pad*2) / Math.max(1, points.length-1);
-  const scaleY = v => h - pad - (v-minV)/(maxV-minV || 1) * (h - pad*1.5);
-  let path = points.map((p,i)=> `${i===0?'M':'L'} ${pad + i*stepX} ${scaleY(p.v).toFixed(1)}`).join(' ');
-  const circles = points.map((p,i)=>`<circle cx="${pad+i*stepX}" cy="${scaleY(p.v).toFixed(1)}" r="3.5" fill="#3b82f6"><title>${p.d}: ${p.v}</title></circle>`).join('');
-  const labels = points.filter((_,i)=> i===0 || i===points.length-1 || i%Math.ceil(points.length/6)===0)
-    .map(p=>{ const i = points.indexOf(p); return `<text x="${pad+i*stepX}" y="${h-6}" font-size="10" fill="#8892a4" text-anchor="middle">${p.d.slice(5)}</text>`; }).join('');
-  container.innerHTML = `<svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
-    <line x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}" stroke="#252d45"/>
-    <path d="${path}" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    ${circles}${labels}
-  </svg>`;
+  if(!wrap.querySelector('canvas')) wrap.innerHTML = '<canvas id="trendChart"></canvas>';
+  if(trendC) trendC.destroy();
+  const ctx = document.getElementById('trendChart').getContext('2d');
+  trendC = new Chart(ctx, {
+    type: 'line',
+    data: { labels: points.map(p=>p.d.slice(5)), datasets: [{
+      label:'Campos faltantes', data: points.map(p=>p.v),
+      borderColor:'#2a78d6', backgroundColor:'rgba(42,120,214,.12)', fill:true,
+      tension:.25, borderWidth:2, pointBackgroundColor:'#2a78d6', pointRadius:4,
+    }] },
+    options: {
+      plugins: { legend:{display:false}, tooltip:{...TOOLTIP_STYLE, callbacks:{label:c=>fmtInt(c.parsed.y)+' campos faltantes'}} },
+      scales: { y:{beginAtZero:true, grid:{color:'#e1e0d9'}, ticks:{color:'#898781'}}, x:{grid:{display:false}, ticks:{color:'#898781'}} }
+    }
+  });
 }
 
 function mcClass(mc){ if(mc===0) return 'mc-0'; if(mc<=4) return 'mc-low'; return 'mc-high'; }
@@ -391,7 +391,7 @@ function renderTable(rows){
   document.getElementById('tblBody').innerHTML = pageRows.map(o=>{
     const chips = o.mf.map(fi=>`<span class="field-chip">${DATA.fields[fi]}</span>`).join(' ');
     return `<tr>
-      <td>${o.h}</td><td class="text-muted">${o.s}</td><td>${o.a}</td><td>${o.o}</td>
+      <td><b>${o.h}</b></td><td class="text-muted">${o.s}</td><td>${o.a}</td><td>${o.o}</td>
       <td>${o.e}</td><td>${o.p}</td>
       <td><span class="mc-badge ${mcClass(o.mc)}">${o.mc}</span></td>
       <td>${chips || '<span class="text-muted">—</span>'}</td>
