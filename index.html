@@ -330,17 +330,21 @@ function renderGroupChart(rows){
   titleEl.childNodes[0].textContent = title + ' ';
 
   const groups = {};
-  rows.forEach(o=>{ const k = byKeyLabel(o) || '(sin dato)'; groups[k] = (groups[k]||0) + o.mc; });
+  rows.forEach(o=>{
+    if(o.mc===0) return;
+    const k = byKeyLabel(o) || '(sin dato)';
+    groups[k] = (groups[k]||0) + 1;
+  });
   const pairs = Object.entries(groups).sort((a,b)=>b[1]-a[1]).slice(0,12).reverse();
 
   if(groupC) groupC.destroy();
   const ctx = document.getElementById('groupChart').getContext('2d');
   groupC = new Chart(ctx, {
     type: 'bar',
-    data: { labels: pairs.map(p=>p[0]), datasets: [{ label:'Campos faltantes', data: pairs.map(p=>p[1]), backgroundColor:'#1baf7a', borderRadius:4, maxBarThickness:22 }] },
+    data: { labels: pairs.map(p=>p[0]), datasets: [{ label:'Oportunidades incompletas', data: pairs.map(p=>p[1]), backgroundColor:'#1baf7a', borderRadius:4, maxBarThickness:22 }] },
     options: {
       indexAxis: 'y',
-      plugins: { legend:{display:false}, tooltip:{...TOOLTIP_STYLE, callbacks:{label:c=>fmtInt(c.parsed.x)+' campos faltantes'}} },
+      plugins: { legend:{display:false}, tooltip:{...TOOLTIP_STYLE, callbacks:{label:c=>fmtInt(c.parsed.x)+' oportunidades incompletas'}} },
       scales: { x:{beginAtZero:true, grid:{color:'#e1e0d9'}, ticks:{color:'#898781'}}, y:{grid:{display:false}, ticks:{color:'#0b0b0b', font:{size:11}}} }
     }
   });
