@@ -21,14 +21,15 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 HISTORY_DIR = os.path.join(DATA_DIR, "history")
 
-# Los 29 campos clave -- TODOS se tratan como obligatorios siempre, sin excepciones.
+# Los 28 campos clave -- TODOS se tratan como obligatorios siempre, sin excepciones.
+# ORIGEN__C excluido a pedido explicito del usuario (2026-08-21).
 FIELDS = [
     "Hunter", "ACCOUNT_NAME", "MES_GANADO_COMISION_HISP", "cus_cust_id",
     "NOMBRE_DE_LA_OPORTUNIDAD", "SUPERVISOR", "SENIORITY", "ETAPA",
     "FECHA_DE_CREACION", "FECHA_DE_CIERRE", "PRODUCTO", "IMPORTE",
     "SIZE_SELLER", "SUBPRODUCTO", "ORIGEN", "PLATAFORMA", "ID_MARCA",
     "CANTIDAD_PDV_ENG", "Account_Tags__c", "ASESOR_MPAGO_OFF__C", "BRAND__C",
-    "INDUSTRIA__C", "INDUSTRIA_Y_SUBSEGMENTO__C", "INDUSTRY", "ORIGEN__C",
+    "INDUSTRIA__C", "INDUSTRIA_Y_SUBSEGMENTO__C", "INDUSTRY",
     "PREMIUM_CX__C", "BILLINGSTATE", "Collector", "Cust_ID__c",
 ]
 
