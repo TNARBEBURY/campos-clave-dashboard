@@ -36,6 +36,9 @@ FIELDS = [
 # Argentina (UTC-3), sin zoneinfo para no depender de tzdata en Windows
 ARG_TZ = timezone(timedelta(hours=-3))
 
+# Supervisores a excluir del tablero (equipo distinto) -- excluye tambien a todos sus hunters.
+EXCLUDED_SUPERVISORS = {"Rosario Canepa"}
+
 
 def fetch_rows():
     creds, _ = google.auth.default(scopes=["https://www.googleapis.com/auth/spreadsheets.readonly"])
@@ -76,6 +79,9 @@ def build_opportunities(col_idx, rows):
             if i is None or i >= len(row):
                 return ""
             return str(row[i]).strip()
+
+        if get("SUPERVISOR") in EXCLUDED_SUPERVISORS:
+            continue
 
         missing_idx = [fi for fi, name in enumerate(FIELDS) if get(name) == ""]
         opps.append({
