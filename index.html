@@ -39,11 +39,13 @@ input[type=text]::placeholder{color:var(--muted)}
 .kpi.k-missing::after{background:var(--critical)}
 .kpi.k-delta::after{background:var(--aqua)}
 .kpi.k-custid::after{background:var(--orange)}
+.kpi.k-accounts::after{background:var(--violet)}
 .kpi .lbl{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
 .kpi .val{font-size:26px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
 .kpi.k-complete .val{color:var(--good)}
 .kpi.k-missing .val{color:var(--critical)}
 .kpi.k-custid .val{color:var(--orange)}
+.kpi.k-accounts .val{color:var(--violet)}
 .kpi .sub2{color:var(--ink2);font-size:11px;margin-top:4px}
 
 .charts-row{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-bottom:22px}
@@ -119,6 +121,11 @@ tr:hover td{background:rgba(11,11,11,.025)}
       <div class="lbl">Completas (0 campos faltantes)</div>
       <div class="val" id="kComplete">-</div>
       <div class="sub2" id="kCompleteSub"></div>
+    </div>
+    <div class="kpi k-accounts">
+      <div class="lbl">Cuentas por acomodar</div>
+      <div class="val" id="kAccounts">-</div>
+      <div class="sub2" id="kAccountsSub"></div>
     </div>
     <div class="kpi k-missing">
       <div class="lbl">Campos faltantes (total)</div>
@@ -269,6 +276,12 @@ function renderKpis(rows){
   document.getElementById('kTotalSub').textContent = activeFilters.length ? activeFilters.join(' · ') : 'Todo el equipo';
   document.getElementById('kComplete').textContent = fmtInt(complete) + (total? ` (${(complete/total*100).toFixed(1)}%)` : '');
   document.getElementById('kCompleteSub').textContent = 'Sin ningún campo clave vacío';
+
+  const accountsTotal = new Set(rows.map(o=>o.a)).size;
+  const accountsIncomplete = new Set(rows.filter(o=>o.mc>0).map(o=>o.a)).size;
+  document.getElementById('kAccounts').textContent = fmtInt(accountsIncomplete) + (accountsTotal? ` (${(accountsIncomplete/accountsTotal*100).toFixed(1)}%)` : '');
+  document.getElementById('kAccountsSub').textContent = `De ${fmtInt(accountsTotal)} cuentas (ACCOUNT_NAME) en este filtro`;
+
   document.getElementById('kMissing').textContent = fmtInt(missing);
   document.getElementById('kMissingSub').textContent = total? `Promedio ${(missing/total).toFixed(1)} por oportunidad` : '';
 
