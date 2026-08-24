@@ -39,6 +39,16 @@ ARG_TZ = timezone(timedelta(hours=-3))
 # Supervisores a excluir del tablero (equipo distinto) -- excluye tambien a todos sus hunters.
 EXCLUDED_SUPERVISORS = {"Rosario Canepa"}
 
+# Campos con logica invertida: se marcan como "problema" cuando SI tienen valor,
+# no cuando estan vacios (cus_cust_id parece un ID legacy -- si esta lleno es sospechoso).
+INVERTED_FIELDS = {"cus_cust_id"}
+
+
+def is_flagged(name, value):
+    if name in INVERTED_FIELDS:
+        return value != ""
+    return value == ""
+
 
 def fetch_rows():
     creds, _ = google.auth.default(scopes=["https://www.googleapis.com/auth/spreadsheets.readonly"])
@@ -85,7 +95,7 @@ def build_opportunities(col_idx, rows):
         if get("SUPERVISOR") in EXCLUDED_SUPERVISORS:
             continue
 
-        missing_idx = [fi for fi, name in enumerate(FIELDS) if get(name) == ""]
+        missing_idx = [fi for fi, name in enumerate(FIELDS) if is_flagged(name, get(name))]
         opps.append({
             "h": get("Hunter"),
             "s": get("SUPERVISOR"),
