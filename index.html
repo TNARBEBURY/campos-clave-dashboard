@@ -328,10 +328,10 @@ function groupDataFromSnapshot(snap){
   return snap.by_hunter[g.key] || null;
 }
 
-// Cuentas (oportunidades) con al menos un campo faltante -- no la suma de campos.
+// Cuentas distintas (ACCOUNT_NAME) con al menos una oportunidad incompleta -- no oportunidades ni campos.
 function incompleteFromSnapshot(snap){
   const d = groupDataFromSnapshot(snap);
-  return d ? (d.total - d.complete) : null;
+  return d ? d.accounts_incomplete : null;
 }
 
 async function computeDelta(){

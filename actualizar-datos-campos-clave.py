@@ -112,7 +112,26 @@ def build_opportunities(col_idx, rows):
 
 def build_aggregates(opps, as_of):
     def blank_group():
-        return {"total": 0, "complete": 0, "missing_slots": 0, "field_missing": [0] * len(FIELDS)}
+        return {
+            "total": 0, "complete": 0, "missing_slots": 0, "field_missing": [0] * len(FIELDS),
+            "_accounts_total": set(), "_accounts_incomplete": set(),
+        }
+
+    def add_to_group(g, o):
+        g["total"] += 1
+        g["missing_slots"] += o["mc"]
+        g["_accounts_total"].add(o["a"])
+        if o["mc"] == 0:
+            g["complete"] += 1
+        else:
+            g["_accounts_incomplete"].add(o["a"])
+        for fi in o["mf"]:
+            g["field_missing"][fi] += 1
+
+    def finalize(g):
+        g["accounts_total"] = len(g.pop("_accounts_total"))
+        g["accounts_incomplete"] = len(g.pop("_accounts_incomplete"))
+        return g
 
     by_sup = {}
     by_hunter = {}  # key: "SUPERVISOR||HUNTER"
@@ -120,20 +139,14 @@ def build_aggregates(opps, as_of):
 
     for o in opps:
         for bucket_map, key in ((by_sup, o["s"]), (by_hunter, f'{o["s"]}||{o["h"]}')):
-            g = bucket_map.setdefault(key, blank_group())
-            g["total"] += 1
-            g["missing_slots"] += o["mc"]
-            if o["mc"] == 0:
-                g["complete"] += 1
-            for fi in o["mf"]:
-                g["field_missing"][fi] += 1
+            add_to_group(bucket_map.setdefault(key, blank_group()), o)
+        add_to_group(overall, o)
 
-        overall["total"] += 1
-        overall["missing_slots"] += o["mc"]
-        if o["mc"] == 0:
-            overall["complete"] += 1
-        for fi in o["mf"]:
-            overall["field_missing"][fi] += 1
+    for g in by_sup.values():
+        finalize(g)
+    for g in by_hunter.values():
+        finalize(g)
+    finalize(overall)
 
     return {
         "as_of": as_of,
