@@ -38,10 +38,12 @@ input[type=text]::placeholder{color:var(--muted)}
 .kpi.k-complete::after{background:var(--good)}
 .kpi.k-missing::after{background:var(--critical)}
 .kpi.k-delta::after{background:var(--aqua)}
+.kpi.k-custid::after{background:var(--orange)}
 .kpi .lbl{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
 .kpi .val{font-size:26px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
 .kpi.k-complete .val{color:var(--good)}
 .kpi.k-missing .val{color:var(--critical)}
+.kpi.k-custid .val{color:var(--orange)}
 .kpi .sub2{color:var(--ink2);font-size:11px;margin-top:4px}
 
 .charts-row{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-bottom:22px}
@@ -123,6 +125,11 @@ tr:hover td{background:rgba(11,11,11,.025)}
       <div class="lbl">Corregidos última semana</div>
       <div class="val" id="kDelta">-</div>
       <div class="sub2" id="kDeltaSub"></div>
+    </div>
+    <div class="kpi k-custid">
+      <div class="lbl">cus_cust_id completo (sospechoso)</div>
+      <div class="val" id="kCustId">-</div>
+      <div class="sub2" id="kCustIdSub">Este campo se marca al revés: se espera vacío</div>
     </div>
   </div>
 
@@ -253,6 +260,10 @@ function renderKpis(rows){
   document.getElementById('kCompleteSub').textContent = 'Sin ningún campo clave vacío';
   document.getElementById('kMissing').textContent = fmtInt(missing);
   document.getElementById('kMissingSub').textContent = total? `Promedio ${(missing/total).toFixed(1)} por oportunidad` : '';
+
+  const custIdx = DATA.fields.indexOf('cus_cust_id');
+  const custFlagged = custIdx===-1 ? 0 : rows.filter(o=>o.mf.includes(custIdx)).length;
+  document.getElementById('kCustId').textContent = fmtInt(custFlagged) + (total? ` (${(custFlagged/total*100).toFixed(1)}%)` : '');
 
   computeDelta().then(({delta, fromDate, available})=>{
     const el = document.getElementById('kDelta');
