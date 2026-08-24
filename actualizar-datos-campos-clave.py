@@ -1,5 +1,5 @@
 """
-Descarga el sheet 'SF RESULTADOS CAMPOS CLAVES' via Sheets API (gcloud ADC),
+Descarga el sheet 'SF CAMPOS CLAVES' (tab 'Extracto 1') via Sheets API (gcloud ADC),
 calcula que campos faltan por oportunidad, y genera:
   - data/opportunities.json  (detalle por oportunidad, para la tabla)
   - data/aggregates.json     (rollups de hoy, para KPIs y graficos)
@@ -13,22 +13,22 @@ import os
 import subprocess
 from datetime import datetime, timezone, timedelta
 
-SHEET_ID = "1gKitwBsX21Pvmfek81LDn_MJJhrYoo7dtdH9hqQg6V0"
-TAB_NAME = "results-20260821-103100"
+SHEET_ID = "1fpBWAPIb7eO0jr0wAYQZXxQmoxjP5XJzBaUJkqod4Xs"
+TAB_GID = 346758064  # tab "Extracto 1" -- se busca por gid, no por nombre (mas robusto a renombres)
 QUOTA_PROJECT = "meli-bi-data"
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 HISTORY_DIR = os.path.join(DATA_DIR, "history")
 
-# Los 28 campos clave -- TODOS se tratan como obligatorios siempre, sin excepciones.
-# ORIGEN__C excluido a pedido explicito del usuario (2026-08-21).
+# Los 27 campos clave -- TODOS se tratan como obligatorios siempre, sin excepciones.
+# ORIGEN__C excluido (2026-08-21). MES_GANADO_COMISION_HISP excluido (2026-08-24).
 FIELDS = [
-    "Hunter", "ACCOUNT_NAME", "MES_GANADO_COMISION_HISP", "cus_cust_id",
+    "Hunter", "ACCOUNT_NAME", "cus_cust_id",
     "NOMBRE_DE_LA_OPORTUNIDAD", "SUPERVISOR", "SENIORITY", "ETAPA",
     "FECHA_DE_CREACION", "FECHA_DE_CIERRE", "PRODUCTO", "IMPORTE",
     "SIZE_SELLER", "SUBPRODUCTO", "ORIGEN", "PLATAFORMA", "ID_MARCA",
-    "CANTIDAD_PDV_ENG", "Account_Tags__c", "ASESOR_MPAGO_OFF__C", "BRAND__C",
+    "CANTIDAD_PUNTOS_DE_VENTA", "Account_Tags__c", "ASESOR_MPAGO_OFF__C", "BRAND__C",
     "INDUSTRIA__C", "INDUSTRIA_Y_SUBSEGMENTO__C", "INDUSTRY",
     "PREMIUM_CX__C", "BILLINGSTATE", "Collector", "Cust_ID__c",
 ]
@@ -50,10 +50,12 @@ def fetch_rows():
     r.raise_for_status()
     sheet_props = [s["properties"] for s in r.json()["sheets"]]
 
-    tab = TAB_NAME if any(p["title"] == TAB_NAME for p in sheet_props) else sheet_props[0]["title"]
-    n_rows = next(p["gridProperties"]["rowCount"] for p in sheet_props if p["title"] == tab)
+    matching = [p for p in sheet_props if p["sheetId"] == TAB_GID]
+    props = matching[0] if matching else sheet_props[0]
+    tab = props["title"]
+    n_rows = props["gridProperties"]["rowCount"]
 
-    rng = f"{tab}!A1:AE{n_rows}"
+    rng = f"{tab}!A1:AZ{n_rows}"
     url = f"https://sheets.googleapis.com/v4/spreadsheets/{SHEET_ID}/values/{requests.utils.quote(rng)}"
     r = requests.get(url, headers=headers, params={"valueRenderOption": "FORMATTED_VALUE"})
     r.raise_for_status()

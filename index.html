@@ -138,7 +138,7 @@ tr:hover td{background:rgba(11,11,11,.025)}
   </div>
 
   <div class="sec">
-    <div class="sec-h">Evolución — campos faltantes <span class="sec-meta" id="trendMeta"></span></div>
+    <div class="sec-h">Evolución — cuentas con campos faltantes <span class="sec-meta" id="trendMeta"></span></div>
     <div class="sec-b" id="trendWrap"><canvas id="trendChart"></canvas></div>
   </div>
 
@@ -285,6 +285,20 @@ function missingSlotsFromSnapshot(snap){
   return snap.by_hunter[g.key] ? snap.by_hunter[g.key].missing_slots : null;
 }
 
+function groupDataFromSnapshot(snap){
+  const g = groupKeyForFilter();
+  if(!snap) return null;
+  if(g.type==='overall') return snap.overall;
+  if(g.type==='supervisor') return snap.by_supervisor[g.key] || null;
+  return snap.by_hunter[g.key] || null;
+}
+
+// Cuentas (oportunidades) con al menos un campo faltante -- no la suma de campos.
+function incompleteFromSnapshot(snap){
+  const d = groupDataFromSnapshot(snap);
+  return d ? (d.total - d.complete) : null;
+}
+
 async function computeDelta(){
   if(HIST_INDEX.length < 2) return {available:false};
   const today = HIST_INDEX[HIST_INDEX.length-1];
@@ -362,7 +376,7 @@ async function renderTrend(){
     return;
   }
   const snaps = await Promise.all(HIST_INDEX.map(getHistSnapshot));
-  const points = HIST_INDEX.map((d,i)=>({d, v: missingSlotsFromSnapshot(snaps[i])})).filter(p=>p.v!==null && p.v!==undefined);
+  const points = HIST_INDEX.map((d,i)=>({d, v: incompleteFromSnapshot(snaps[i])})).filter(p=>p.v!==null && p.v!==undefined);
   if(points.length < 2){
     if(trendC){ trendC.destroy(); trendC=null; }
     wrap.innerHTML = '<div class="no-hist">Sin historial suficiente para este filtro todavía.</div>';
@@ -374,12 +388,12 @@ async function renderTrend(){
   trendC = new Chart(ctx, {
     type: 'line',
     data: { labels: points.map(p=>p.d.slice(5)), datasets: [{
-      label:'Campos faltantes', data: points.map(p=>p.v),
+      label:'Cuentas con campos faltantes', data: points.map(p=>p.v),
       borderColor:'#2a78d6', backgroundColor:'rgba(42,120,214,.12)', fill:true,
       tension:.25, borderWidth:2, pointBackgroundColor:'#2a78d6', pointRadius:4,
     }] },
     options: {
-      plugins: { legend:{display:false}, tooltip:{...TOOLTIP_STYLE, callbacks:{label:c=>fmtInt(c.parsed.y)+' campos faltantes'}} },
+      plugins: { legend:{display:false}, tooltip:{...TOOLTIP_STYLE, callbacks:{label:c=>fmtInt(c.parsed.y)+' cuentas con campos faltantes'}} },
       scales: { y:{beginAtZero:true, grid:{color:'#e1e0d9'}, ticks:{color:'#898781'}}, x:{grid:{display:false}, ticks:{color:'#898781'}} }
     }
   });
