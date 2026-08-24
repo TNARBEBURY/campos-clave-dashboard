@@ -99,6 +99,10 @@ tr:hover td{background:rgba(11,11,11,.025)}
       <select id="fHunter"></select>
     </div>
     <div class="filter-grp">
+      <div class="filter-label">Campo con problema</div>
+      <select id="fField"><option>Todos</option></select>
+    </div>
+    <div class="filter-grp">
       <div class="filter-label">Buscar cuenta / oportunidad</div>
       <input type="text" id="fSearch" placeholder="Ej: Farmavip...">
     </div>
@@ -181,7 +185,7 @@ Chart.defaults.color = '#898781';
 let DATA = null;      // {as_of, fields, opportunities}
 let HIST_INDEX = [];  // dates
 let HIST_CACHE = {};  // date -> aggregates json
-let state = { supervisor: 'Todos', hunter: 'Todos', search: '', page: 0 };
+let state = { supervisor: 'Todos', hunter: 'Todos', field: 'Todos', search: '', page: 0 };
 let fieldsC, groupC, trendC;
 
 function cacheBust(url){ return url + (url.includes('?') ? '&' : '?') + 'v=' + Date.now(); }
@@ -205,11 +209,15 @@ function populateFilters(){
   selSup.innerHTML = '<option>Todos</option>' + sups.map(s=>`<option>${s}</option>`).join('');
   selSup.addEventListener('change', ()=>{ state.supervisor = selSup.value; state.hunter='Todos'; state.page=0; populateHunters(); render(); });
 
+  const selField = document.getElementById('fField');
+  selField.innerHTML = '<option>Todos</option>' + DATA.fields.map(f=>`<option>${f}</option>`).join('');
+  selField.addEventListener('change', ()=>{ state.field = selField.value; state.page=0; render(); });
+
   document.getElementById('fHunter').addEventListener('change', (e)=>{ state.hunter = e.target.value; state.page=0; render(); });
   document.getElementById('fSearch').addEventListener('input', (e)=>{ state.search = e.target.value.trim().toLowerCase(); state.page=0; render(); });
   document.getElementById('btnReset').addEventListener('click', ()=>{
-    state = { supervisor:'Todos', hunter:'Todos', search:'', page:0 };
-    selSup.value='Todos'; document.getElementById('fSearch').value='';
+    state = { supervisor:'Todos', hunter:'Todos', field:'Todos', search:'', page:0 };
+    selSup.value='Todos'; selField.value='Todos'; document.getElementById('fSearch').value='';
     populateHunters(); render();
   });
   document.getElementById('btnPrev').addEventListener('click', ()=>{ if(state.page>0){state.page--; render();} });
@@ -228,9 +236,11 @@ function populateHunters(){
 }
 
 function filtered(){
+  const fieldIdx = state.field!=='Todos' ? DATA.fields.indexOf(state.field) : -1;
   return DATA.opportunities.filter(o=>{
     if(state.supervisor!=='Todos' && o.s!==state.supervisor) return false;
     if(state.hunter!=='Todos' && o.h!==state.hunter) return false;
+    if(fieldIdx!==-1 && !o.mf.includes(fieldIdx)) return false;
     if(state.search){
       const hay = (o.a+' '+o.o).toLowerCase();
       if(!hay.includes(state.search)) return false;
@@ -255,7 +265,8 @@ function renderKpis(rows){
   const complete = rows.filter(o=>o.mc===0).length;
   const missing = rows.reduce((a,o)=>a+o.mc,0);
   document.getElementById('kTotal').textContent = fmtInt(total);
-  document.getElementById('kTotalSub').textContent = state.supervisor==='Todos' && state.hunter==='Todos' ? 'Todo el equipo' : [state.supervisor, state.hunter].filter(x=>x!=='Todos').join(' · ');
+  const activeFilters = [state.supervisor, state.hunter, state.field!=='Todos'? `campo: ${state.field}` : 'Todos'].filter(x=>x!=='Todos');
+  document.getElementById('kTotalSub').textContent = activeFilters.length ? activeFilters.join(' · ') : 'Todo el equipo';
   document.getElementById('kComplete').textContent = fmtInt(complete) + (total? ` (${(complete/total*100).toFixed(1)}%)` : '');
   document.getElementById('kCompleteSub').textContent = 'Sin ningún campo clave vacío';
   document.getElementById('kMissing').textContent = fmtInt(missing);
