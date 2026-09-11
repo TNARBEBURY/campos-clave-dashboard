@@ -104,6 +104,7 @@ def build_opportunities(col_idx, rows):
             "e": get("ETAPA"),
             "p": get("PRODUCTO"),
             "imp": get("IMPORTE"),
+            "cid": get("Cust_ID__c"),  # ID de PDV -- para poder trazar cambios dia a dia dentro de una misma cuenta/oportunidad
             "mc": len(missing_idx),
             "mf": missing_idx,
         })
