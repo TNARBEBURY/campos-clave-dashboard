@@ -148,11 +148,11 @@ tr:hover td{background:rgba(11,11,11,.025)}
   <div class="charts-row">
     <div class="sec">
       <div class="sec-h">Campos que más faltan <span class="sec-meta">Top 10</span></div>
-      <div class="sec-b"><canvas id="fieldsChart"></canvas></div>
+      <div class="sec-b"><canvas id="fieldsChart" height="280"></canvas></div>
     </div>
     <div class="sec">
       <div class="sec-h" id="groupTitle">Por supervisor <span class="sec-meta" id="groupMeta"></span></div>
-      <div class="sec-b"><canvas id="groupChart"></canvas></div>
+      <div class="sec-b"><canvas id="groupChart" height="280"></canvas></div>
     </div>
     <div class="sec">
       <div class="sec-h">Hunters con más cuentas por acomodar <span class="sec-meta" id="hunterAccountsMeta">Top 10</span></div>
@@ -312,8 +312,14 @@ async function getHistSnapshot(date){
   return j;
 }
 
+function supervisorForHunter(hunter){
+  if(state.supervisor !== 'Todos') return state.supervisor;
+  const found = DATA.opportunities.find(o => o.h === hunter);
+  return found ? found.s : state.supervisor;
+}
+
 function groupKeyForFilter(){
-  if(state.hunter!=='Todos') return {type:'hunter', key: `${state.supervisor}||${state.hunter}`};
+  if(state.hunter!=='Todos') return {type:'hunter', key: `${supervisorForHunter(state.hunter)}||${state.hunter}`};
   if(state.supervisor!=='Todos') return {type:'supervisor', key: state.supervisor};
   return {type:'overall'};
 }
@@ -369,6 +375,7 @@ function renderFieldChart(rows){
     data: { labels: pairs.map(p=>p.f), datasets: [{ label:'Oportunidades', data: pairs.map(p=>p.c), backgroundColor:'#2a78d6', borderRadius:4, maxBarThickness:22 }] },
     options: {
       indexAxis: 'y',
+      maintainAspectRatio: false,
       plugins: { legend:{display:false}, tooltip:{...TOOLTIP_STYLE, callbacks:{label:c=>fmtInt(c.parsed.x)+' oportunidades'}} },
       scales: { x:{beginAtZero:true, grid:{color:'#e1e0d9'}, ticks:{color:'#898781'}}, y:{grid:{display:false}, ticks:{color:'#0b0b0b', font:{size:11}}} }
     }
@@ -384,13 +391,14 @@ function renderGroupChart(rows){
   else { title='Por supervisor'; metaEl.textContent = 'Todos'; byKeyLabel = o=>o.s; }
   titleEl.childNodes[0].textContent = title + ' ';
 
-  const groups = {};
-  rows.forEach(o=>{
-    if(o.mc===0) return;
+  const groups = new Map();
+  for(const o of rows){
+    if(o.mc===0) continue;
     const k = byKeyLabel(o) || '(sin dato)';
-    (groups[k] || (groups[k] = new Set())).add(o.a);
-  });
-  const pairs = Object.entries(groups).map(([k,set])=>[k, set.size]).sort((a,b)=>b[1]-a[1]).slice(0,12).reverse();
+    if(!groups.has(k)) groups.set(k, new Set());
+    groups.get(k).add(o.a);
+  }
+  const pairs = Array.from(groups.entries(), ([k,set])=>[k, set.size]).sort((a,b)=>b[1]-a[1]).slice(0,12).reverse();
 
   if(groupC) groupC.destroy();
   const ctx = document.getElementById('groupChart').getContext('2d');
@@ -399,6 +407,7 @@ function renderGroupChart(rows){
     data: { labels: pairs.map(p=>p[0]), datasets: [{ label:'Cuentas por acomodar', data: pairs.map(p=>p[1]), backgroundColor:'#1baf7a', borderRadius:4, maxBarThickness:22 }] },
     options: {
       indexAxis: 'y',
+      maintainAspectRatio: false,
       plugins: { legend:{display:false}, tooltip:{...TOOLTIP_STYLE, callbacks:{label:c=>fmtInt(c.parsed.x)+' cuentas por acomodar'}} },
       scales: { x:{beginAtZero:true, grid:{color:'#e1e0d9'}, ticks:{color:'#898781'}}, y:{grid:{display:false}, ticks:{color:'#0b0b0b', font:{size:11}}} }
     }
