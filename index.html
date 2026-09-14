@@ -106,6 +106,10 @@ tr:hover td{background:rgba(11,11,11,.025)}
       <select id="fField"><option>Todos</option></select>
     </div>
     <div class="filter-grp">
+      <div class="filter-label">Etapa</div>
+      <select id="fEtapa"><option>Todos</option></select>
+    </div>
+    <div class="filter-grp">
       <div class="filter-label">Buscar cuenta / oportunidad</div>
       <input type="text" id="fSearch" placeholder="Ej: Farmavip...">
     </div>
@@ -197,7 +201,7 @@ Chart.defaults.color = '#898781';
 let DATA = null;      // {as_of, fields, opportunities}
 let HIST_INDEX = [];  // dates
 let HIST_CACHE = {};  // date -> aggregates json
-let state = { supervisor: 'Todos', hunter: 'Todos', field: 'Todos', search: '', page: 0 };
+let state = { supervisor: 'Todos', hunter: 'Todos', field: 'Todos', etapa: 'Todos', search: '', page: 0 };
 let fieldsC, groupC, trendC;
 
 function cacheBust(url){ return url + (url.includes('?') ? '&' : '?') + 'v=' + Date.now(); }
@@ -225,11 +229,16 @@ function populateFilters(){
   selField.innerHTML = '<option>Todos</option>' + DATA.fields.map(f=>`<option>${f}</option>`).join('');
   selField.addEventListener('change', ()=>{ state.field = selField.value; state.page=0; render(); });
 
+  const etapas = Array.from(new Set(DATA.opportunities.map(o=>o.e))).filter(Boolean).sort();
+  const selEtapa = document.getElementById('fEtapa');
+  selEtapa.innerHTML = '<option>Todos</option>' + etapas.map(e=>`<option>${e}</option>`).join('');
+  selEtapa.addEventListener('change', ()=>{ state.etapa = selEtapa.value; state.page=0; render(); });
+
   document.getElementById('fHunter').addEventListener('change', (e)=>{ state.hunter = e.target.value; state.page=0; render(); });
   document.getElementById('fSearch').addEventListener('input', (e)=>{ state.search = e.target.value.trim().toLowerCase(); state.page=0; render(); });
   document.getElementById('btnReset').addEventListener('click', ()=>{
-    state = { supervisor:'Todos', hunter:'Todos', field:'Todos', search:'', page:0 };
-    selSup.value='Todos'; selField.value='Todos'; document.getElementById('fSearch').value='';
+    state = { supervisor:'Todos', hunter:'Todos', field:'Todos', etapa:'Todos', search:'', page:0 };
+    selSup.value='Todos'; selField.value='Todos'; selEtapa.value='Todos'; document.getElementById('fSearch').value='';
     populateHunters(); render();
   });
   document.getElementById('btnPrev').addEventListener('click', ()=>{ if(state.page>0){state.page--; render();} });
@@ -252,6 +261,7 @@ function filtered(){
   return DATA.opportunities.filter(o=>{
     if(state.supervisor!=='Todos' && o.s!==state.supervisor) return false;
     if(state.hunter!=='Todos' && o.h!==state.hunter) return false;
+    if(state.etapa!=='Todos' && o.e!==state.etapa) return false;
     if(fieldIdx!==-1 && !o.mf.includes(fieldIdx)) return false;
     if(state.search){
       const hay = (o.a+' '+o.o).toLowerCase();
@@ -278,7 +288,7 @@ function renderKpis(rows){
   const complete = rows.filter(o=>o.mc===0).length;
   const missing = rows.reduce((a,o)=>a+o.mc,0);
   document.getElementById('kTotal').textContent = fmtInt(total);
-  const activeFilters = [state.supervisor, state.hunter, state.field!=='Todos'? `campo: ${state.field}` : 'Todos'].filter(x=>x!=='Todos');
+  const activeFilters = [state.supervisor, state.hunter, state.field!=='Todos'? `campo: ${state.field}` : 'Todos', state.etapa!=='Todos'? `etapa: ${state.etapa}` : 'Todos'].filter(x=>x!=='Todos');
   document.getElementById('kTotalSub').textContent = activeFilters.length ? activeFilters.join(' · ') : 'Todo el equipo';
   document.getElementById('kComplete').textContent = fmtInt(complete) + (total? ` (${(complete/total*100).toFixed(1)}%)` : '');
   document.getElementById('kCompleteSub').textContent = 'Sin ningún campo clave vacío';
