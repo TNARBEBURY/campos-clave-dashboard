@@ -174,7 +174,7 @@ tr:hover td{background:rgba(11,11,11,.025)}
     <div style="overflow-x:auto">
       <table>
         <thead><tr>
-          <th>Hunter</th><th>Supervisor</th><th>Cuenta</th><th>Oportunidad</th>
+          <th>Hunter</th><th>Supervisor</th><th>Cuenta</th><th>Cust ID</th><th>Oportunidad</th>
           <th>Etapa</th><th>Producto</th><th>Faltan</th><th>Campos faltantes</th>
         </tr></thead>
         <tbody id="tblBody"></tbody>
@@ -498,12 +498,12 @@ function renderTable(rows){
   document.getElementById('tblBody').innerHTML = pageRows.map(o=>{
     const chips = o.mf.map(fi=>`<span class="field-chip">${DATA.fields[fi]}</span>`).join(' ');
     return `<tr>
-      <td><b>${o.h}</b></td><td class="text-muted">${o.s}</td><td>${o.a}</td><td>${o.o}</td>
+      <td><b>${o.h}</b></td><td class="text-muted">${o.s}</td><td>${o.a}</td><td class="text-muted">${o.cid || '—'}</td><td>${o.o}</td>
       <td>${o.e}</td><td>${o.p}</td>
       <td><span class="mc-badge ${mcClass(o.mc)}">${o.mc}</span></td>
       <td>${chips || '<span class="text-muted">—</span>'}</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="8" class="text-muted" style="text-align:center;padding:24px">Sin resultados</td></tr>';
+  }).join('') || '<tr><td colspan="9" class="text-muted" style="text-align:center;padding:24px">Sin resultados</td></tr>';
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   document.getElementById('pagerInfo').textContent = `Página ${state.page+1} de ${totalPages}`;
