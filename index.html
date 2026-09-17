@@ -170,11 +170,14 @@ tr:hover td{background:rgba(11,11,11,.025)}
   </div>
 
   <div class="sec">
-    <div class="sec-h">Detalle de oportunidades <span class="sec-meta" id="tableMeta"></span></div>
+    <div class="sec-h">
+      <span>Detalle de oportunidades <span class="sec-meta" id="tableMeta"></span></span>
+      <button class="reset-btn" id="btnDownload" style="font-weight:600">⬇ Descargar CSV</button>
+    </div>
     <div style="overflow-x:auto">
       <table>
         <thead><tr>
-          <th>Hunter</th><th>Supervisor</th><th>Cuenta</th><th>Cust ID</th><th>Oportunidad</th>
+          <th>Hunter</th><th>Supervisor</th><th>Cuenta</th><th>Account ID</th><th>Cust ID</th><th>Oportunidad</th><th>Opportunity ID</th>
           <th>Etapa</th><th>Producto</th><th>Faltan</th><th>Campos faltantes</th>
         </tr></thead>
         <tbody id="tblBody"></tbody>
@@ -243,8 +246,36 @@ function populateFilters(){
   });
   document.getElementById('btnPrev').addEventListener('click', ()=>{ if(state.page>0){state.page--; render();} });
   document.getElementById('btnNext').addEventListener('click', ()=>{ state.page++; render(); });
+  document.getElementById('btnDownload').addEventListener('click', downloadCSV);
 
   populateHunters();
+}
+
+function csvEscape(v){
+  const s = (v===undefined || v===null) ? '' : String(v);
+  return /[",\n]/.test(s) ? '"' + s.replace(/"/g,'""') + '"' : s;
+}
+
+function downloadCSV(){
+  const rows = filtered();
+  const header = ['Hunter','Supervisor','Cuenta','Account ID','Cust ID','Oportunidad','Opportunity ID','Etapa','Producto','Importe','Campos faltantes (cant)','Campos faltantes (detalle)'];
+  const lines = [header.map(csvEscape).join(',')];
+  rows.forEach(o=>{
+    const missing = o.mf.map(fi=>DATA.fields[fi]).join('; ');
+    lines.push([o.h,o.s,o.a,o.aid,o.cid,o.o,o.oid,o.e,o.p,o.imp,o.mc,missing].map(csvEscape).join(','));
+  });
+  const csv = '﻿' + lines.join('\r\n');
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const parts = [state.supervisor, state.hunter, state.field, state.etapa].filter(x=>x!=='Todos');
+  const suffix = parts.length ? '_' + parts.join('_').replace(/[^a-zA-Z0-9_-]+/g,'-') : '_todos';
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `campos-clave${suffix}_${DATA.as_of}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function populateHunters(){
@@ -498,12 +529,12 @@ function renderTable(rows){
   document.getElementById('tblBody').innerHTML = pageRows.map(o=>{
     const chips = o.mf.map(fi=>`<span class="field-chip">${DATA.fields[fi]}</span>`).join(' ');
     return `<tr>
-      <td><b>${o.h}</b></td><td class="text-muted">${o.s}</td><td>${o.a}</td><td class="text-muted">${o.cid || '—'}</td><td>${o.o}</td>
+      <td><b>${o.h}</b></td><td class="text-muted">${o.s}</td><td>${o.a}</td><td class="text-muted">${o.aid || '—'}</td><td class="text-muted">${o.cid || '—'}</td><td>${o.o}</td><td class="text-muted">${o.oid || '—'}</td>
       <td>${o.e}</td><td>${o.p}</td>
       <td><span class="mc-badge ${mcClass(o.mc)}">${o.mc}</span></td>
       <td>${chips || '<span class="text-muted">—</span>'}</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="9" class="text-muted" style="text-align:center;padding:24px">Sin resultados</td></tr>';
+  }).join('') || '<tr><td colspan="11" class="text-muted" style="text-align:center;padding:24px">Sin resultados</td></tr>';
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   document.getElementById('pagerInfo').textContent = `Página ${state.page+1} de ${totalPages}`;
