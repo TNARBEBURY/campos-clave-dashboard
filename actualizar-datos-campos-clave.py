@@ -44,6 +44,9 @@ EXCLUDED_SUPERVISORS = {"Rosario Canepa"}
 # no cuando estan vacios (cus_cust_id parece un ID legacy -- si esta lleno es sospechoso).
 INVERTED_FIELDS = {"cus_cust_id"}
 
+# Campos que se muestran en la tabla de detalle pero NO cuentan para "campo faltante".
+EXTRA_DISPLAY_FIELDS = ["Cust_ID__c", "ACCOUNT_ID", "OPPORTUNITY_ID"]
+
 
 def is_flagged(name, value):
     if name in INVERTED_FIELDS:
@@ -75,7 +78,8 @@ def fetch_rows():
         raise RuntimeError("El sheet no devolvio filas")
 
     header = values[0]
-    col_idx = {name: header.index(name) for name in FIELDS if name in header}
+    wanted_names = list(FIELDS) + [n for n in EXTRA_DISPLAY_FIELDS if n not in FIELDS]
+    col_idx = {name: header.index(name) for name in wanted_names if name in header}
     missing_cols = [name for name in FIELDS if name not in header]
     if missing_cols:
         print(f"AVISO: columnas no encontradas en el header del sheet: {missing_cols}")
@@ -106,6 +110,8 @@ def build_opportunities(col_idx, rows):
             "p": get("PRODUCTO"),
             "imp": get("IMPORTE"),
             "cid": get("Cust_ID__c"),  # ID de PDV -- para poder trazar cambios dia a dia dentro de una misma cuenta/oportunidad
+            "aid": get("ACCOUNT_ID"),
+            "oid": get("OPPORTUNITY_ID"),
             "mc": len(missing_idx),
             "mf": missing_idx,
         })
