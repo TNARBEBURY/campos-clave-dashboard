@@ -62,6 +62,8 @@ table{width:100%;border-collapse:collapse;font-size:12.5px}
 th{text-align:left;color:var(--muted);font-weight:600;font-size:10.5px;text-transform:uppercase;letter-spacing:.03em;padding:6px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
 td{padding:5px 10px;border-bottom:1px solid var(--grid);vertical-align:middle;color:var(--ink2);white-space:nowrap}
 td b{color:var(--ink)}
+td a{color:var(--blue);text-decoration:none}
+td a:hover{text-decoration:underline}
 tr:hover td{background:rgba(11,11,11,.025)}
 
 .mc-badge{display:inline-block;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
@@ -258,11 +260,13 @@ function csvEscape(v){
 
 function downloadCSV(){
   const rows = filtered();
-  const header = ['Hunter','Supervisor','Cuenta','Account ID','Cust ID','Oportunidad','Opportunity ID','Etapa','Producto','Importe','Campos faltantes (cant)','Campos faltantes (detalle)'];
+  const header = ['Hunter','Supervisor','Cuenta','Account ID','Link Cuenta SF','Cust ID','Oportunidad','Opportunity ID','Link Oportunidad SF','Etapa','Producto','Importe','Campos faltantes (cant)','Campos faltantes (detalle)'];
   const lines = [header.map(csvEscape).join(',')];
   rows.forEach(o=>{
     const missing = o.mf.map(fi=>DATA.fields[fi]).join('; ');
-    lines.push([o.h,o.s,o.a,o.aid,o.cid,o.o,o.oid,o.e,o.p,o.imp,o.mc,missing].map(csvEscape).join(','));
+    const accUrl = o.aid ? sfAccountUrl(o.aid) : '';
+    const oppUrl = o.oid ? sfOpportunityUrl(o.oid) : '';
+    lines.push([o.h,o.s,o.a,o.aid,accUrl,o.cid,o.o,o.oid,oppUrl,o.e,o.p,o.imp,o.mc,missing].map(csvEscape).join(','));
   });
   const csv = '﻿' + lines.join('\r\n');
   const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
@@ -303,6 +307,9 @@ function filtered(){
 }
 
 function fmtInt(n){ return n.toLocaleString('es-AR'); }
+
+function sfAccountUrl(id){ return `https://meli.lightning.force.com/lightning/r/Account/${id}/view`; }
+function sfOpportunityUrl(id){ return `https://meli.lightning.force.com/lightning/r/Opportunity/${id}/view`; }
 
 function render(){
   const rows = filtered();
@@ -528,8 +535,10 @@ function renderTable(rows){
   document.getElementById('tableMeta').textContent = `${fmtInt(sorted.length)} oportunidades`;
   document.getElementById('tblBody').innerHTML = pageRows.map(o=>{
     const chips = o.mf.map(fi=>`<span class="field-chip">${DATA.fields[fi]}</span>`).join(' ');
+    const aidCell = o.aid ? `<a href="${sfAccountUrl(o.aid)}" target="_blank" rel="noopener">${o.aid}</a>` : '—';
+    const oidCell = o.oid ? `<a href="${sfOpportunityUrl(o.oid)}" target="_blank" rel="noopener">${o.oid}</a>` : '—';
     return `<tr>
-      <td><b>${o.h}</b></td><td class="text-muted">${o.s}</td><td>${o.a}</td><td class="text-muted">${o.aid || '—'}</td><td class="text-muted">${o.cid || '—'}</td><td>${o.o}</td><td class="text-muted">${o.oid || '—'}</td>
+      <td><b>${o.h}</b></td><td class="text-muted">${o.s}</td><td>${o.a}</td><td class="text-muted">${aidCell}</td><td class="text-muted">${o.cid || '—'}</td><td>${o.o}</td><td class="text-muted">${oidCell}</td>
       <td>${o.e}</td><td>${o.p}</td>
       <td><span class="mc-badge ${mcClass(o.mc)}">${o.mc}</span></td>
       <td>${chips || '<span class="text-muted">—</span>'}</td>
